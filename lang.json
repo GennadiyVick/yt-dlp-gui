@@ -10,5 +10,9 @@
 "quit": {"default":"Quit", "ru": "Выход"},
 "open_a_folder": {"default":"Open a folder", "ru": "Выбрать папку"},
 "show_formats": {"default":"Show formats", "ru": "Показать форматы"},
-"size_format_dlg_title": {"default":"Choose size", "ru": "Выбери размер"}
+"size_format_dlg_title": {"default":"Choose size", "ru": "Выбери размер"},
+"yt_dlp_file": {"default": "yt_dlp filename (with full path if necessary)", "ru": "Имя файла yt_dlp (полный путь если надо)"},
+"player_file": {"default": "player filename (with full path if necessary)", "ru": "Имя файла плеера (полный путь если надо)"},
+"settingsdialog": {"default": "Settings", "ru": "Настройка"}
+
 }

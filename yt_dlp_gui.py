@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 import os
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -7,6 +8,10 @@ from subprocess import Popen, PIPE
 import mainwindow
 from lang import Lang
 from sizeformatdialog import showSizeDialog
+from settingsdialog import showSettingsDialog
+
+YT_DLP_FILE = 'yt-dlp'
+PLAYER_FILE = 'mplayer'
 
 def strtoint(v, default=0):
     try:
@@ -19,7 +24,6 @@ def strtoint(v, default=0):
 class ThreadWorker(QObject):
     finished = pyqtSignal()
     onLineRead = pyqtSignal(str)
-    #onDownloaded = pyqtSignal(feedparser.util.FeedParserDict)
 
     def __init__(self, thread, cmd):
         super(ThreadWorker,self).__init__()
@@ -46,10 +50,10 @@ class MainWindow(QMainWindow):
         self.ui.bBrowse.clicked.connect(self.getFolder)
         self.ui.bPlay.clicked.connect(self.play)
         self.ui.bDownload.clicked.connect(self.download)
+        self.ui.bSet.clicked.connect(self.showsettings)
         self.currenturls = []
         self.currenturlindex = 0
         self.updatesettings()
-        self.yt_dlp_file = ''
         self.loading_formats = False
         self.formats = []
         self.selected_format = 0
@@ -65,9 +69,23 @@ class MainWindow(QMainWindow):
             self.move(x,y)
         else:
             self.move(QtWidgets.QApplication.desktop().screen().rect().center() - self.rect().center())
-
-        self.yt_dlp_file = sets.value("Main/yt_dlp_file",'')
+        self.yt_dlp_file = sets.value("Main/yt_dlp_file",YT_DLP_FILE)
+        self.player_file = sets.value("Main/player_file",PLAYER_FILE)
         self.ui.peDir.setPlainText(sets.value("Main/savepath",""))
+        v = int(strtoint(sets.value("Main/selectedsize")))
+        if v == 0:
+            self.ui.b720.setChecked(True)
+        elif v == 1:
+            self.ui.bMax.setChecked(True)
+        else:
+            self.ui.bFormats.setChecked(True)
+
+    def showsettings(self):
+        r = showSettingsDialog(self, (self.yt_dlp_file,self.player_file))
+        if r[0] == True:
+            self.yt_dlp_file = r[1][0]
+            self.player_file = r[1][2]
+
 
     def savesettings(self):
         sets = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, os.path.join('RoganovSoft', 'Yt-dlp-gui'), "config")
@@ -76,19 +94,39 @@ class MainWindow(QMainWindow):
         sets.setValue("Main/Width", self.width())
         sets.setValue("Main/Height", self.height())
         sets.setValue("Main/yt_dlp_file", self.yt_dlp_file)
+        sets.setValue("Main/player_file", self.player_file)
         sets.setValue("Main/savepath",self.ui.peDir.toPlainText())
+        if self.ui.b720.isChecked():
+            sets.setValue("Main/selectedsize",0)
+        elif self.ui.bFormats.isChecked():
+            sets.setValue("Main/selectedsize",2)
+        else:
+            sets.setValue("Main/selectedsize",1)
 
     def getFolder(self):
         self.ui.peDir.setPlainText(QFileDialog.getExistingDirectory (self, self.lang.tr("open_a_folder"), "", QFileDialog.ShowDirsOnly))
 
     def play(self):
-        url = self.ui.peLink.toPlainText()
-        self.runcmd('/home/genius/apps/yt-dlp-play '+url)
+        dir = self.ui.peDir.toPlainText().split('\n')
+        if len(dir) == 0 or len(dir[0]) < 2:
+            return
+        os.chdir(dir[0])
+        self.ui.peLog.setPlainText("")
+        urls = self.ui.peLink.toPlainText().split('\n')
+        if len(urls) > 1:
+            self.ui.peLog.appendPlainText("!!!Play only first url!")
+        self.currenturls = [urls[0]]
+        self.currenturlindex = 0
+        self.ui.peLog.appendPlainText("Downloadin format 1280X720")
+        self.runcmd(f'{self.yt_dlp_file} -f 22 -q -o- {urls[0]} | {self.player_file} -af scaletempo -softvol -softvol-max 400 -cache 8192  -')
+        #yt-dlp -f 22 -q -o- "$*" | /home/genius/apps/mplayer.ext -af scaletempo -softvol -softvol-max 400 -cache 8192  -
+
 
     def download(self):
         self.loading_formats = False
         self.selected_format = 0
         self.formats.clear()
+        self.ui.peLog.setPlainText("")
         dir = self.ui.peDir.toPlainText().split('\n')
         if len(dir) == 0 or len(dir[0]) < 2:
             return
@@ -107,7 +145,7 @@ class MainWindow(QMainWindow):
         for i in range(len(urls)):
             if len(urls[i]) > 7:
                 self.currenturlindex = i
-                self.runcmd(f'/home/genius/apps/yt-dlp {vf} {urls[i]}')
+                self.runcmd(f'{self.yt_dlp_file} {vf} {urls[i]}')
                 break
 
     def runcmd(self, cmd):
@@ -120,12 +158,11 @@ class MainWindow(QMainWindow):
         self.started = True
         self.ui.bPlay.setEnabled(False)
         self.ui.bDownload.setEnabled(False)
-        self.ui.peLog.setPlainText('run command: '+cmd)
+        self.ui.peLog.appendPlainText('run command: '+cmd)
         self.ui.pb.setValue(0)
         self.thread.start()
 
     def parseformats(self):
-        #https://www.youtube.com/watch?v=te17kB8RlS8
         flist = []
         for i in range(2, len(self.formats)):
             line = self.formats[i]
@@ -151,7 +188,7 @@ class MainWindow(QMainWindow):
             self.loading_formats = False
             self.formats.clear()
             vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
-            self.runcmd(f'/home/genius/apps/yt-dlp {vf} {self.currenturls[self.currenturlindex]}')
+            self.runcmd(f'{self.yt_dlp_file} {vf} {self.currenturls[self.currenturlindex]}')
         else:
             self.ui.peLog.appendPlainText('error: !cannot parse formats')
 
@@ -170,7 +207,7 @@ class MainWindow(QMainWindow):
                 vf = '-F'
             else:
                 vf = ''
-            self.runcmd(f'/home/genius/apps/yt-dlp {vf} {self.currenturls[self.currenturlindex]}')
+            self.runcmd(f'{self.yt_dlp_file} {vf} {self.currenturls[self.currenturlindex]}')
             return
         self.currenturls = []
         self.started = False
