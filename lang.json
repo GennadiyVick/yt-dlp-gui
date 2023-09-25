@@ -1,0 +1,14 @@
+{
+"size": {"default":"Size","ru":"Размер"},
+"where_to_save": {"default":"Where to save:", "ru": "Куда сохранять:"},
+"links": {"default":"Links:", "ru": "Ссылки:"},
+"log": {"default":"Log:", "ru": "Лог:"},
+"download": {"default":"Download", "ru": "Загрузить"},
+"play_downloading": {"default":"Play downloading", "ru": "Воспроизвести"},
+"youtube_download": {"default":"Youtube download", "ru": "Загрузка с youtube"},
+"maximum": {"default":"Maximum", "ru": "Максимальный"},
+"quit": {"default":"Quit", "ru": "Выход"},
+"open_a_folder": {"default":"Open a folder", "ru": "Выбрать папку"},
+"show_formats": {"default":"Show formats", "ru": "Показать форматы"},
+"size_format_dlg_title": {"default":"Choose size", "ru": "Выбери размер"}
+}
