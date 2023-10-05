@@ -1,5 +1,5 @@
 # Yt-dlp GUI. 
-## For download videos from YouTube
+## For download videos from YouTube by using [YT-DLP](https://github.com/yt-dlp/yt-dlp)
 ![screenshot](https://github.com/GennadiyVick/yt-dlp-gui/blob/master/image.png)
 ## Required:
 To run the program, you need python itself and the installed PyQt5 module and of course you need [yt-dlp](https://github.com/yt-dlp/yt-dlp) for this to work.
