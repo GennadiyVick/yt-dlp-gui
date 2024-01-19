@@ -1,4 +1,4 @@
-# Yt-dlp GUI. 
+# Yt-dlp GUI.
 ## For download videos from YouTube by using [YT-DLP](https://github.com/yt-dlp/yt-dlp)
 ![screenshot](https://github.com/GennadiyVick/yt-dlp-gui/blob/master/image.png)
 ## Required:

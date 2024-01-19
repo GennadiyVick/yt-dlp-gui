@@ -5,8 +5,8 @@ import os
 class Lang:
     def __init__(self):
         l,_ = locale.getdefaultlocale()
-        #l = l.lower()[0:2]
-        l = 'en'
+        l = l.lower()[0:2]
+        #l = 'en'
         self.lang = 'default'
         fn = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'lang.json')
         if os.path.isfile(fn):

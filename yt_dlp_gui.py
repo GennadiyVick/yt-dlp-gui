@@ -9,6 +9,7 @@ import mainwindow
 from lang import Lang
 from sizeformatdialog import showSizeDialog
 from settingsdialog import showSettingsDialog
+import signal
 
 YT_DLP_FILE = 'yt-dlp'
 PLAYER_FILE = 'mplayer'
@@ -29,12 +30,16 @@ class ThreadWorker(QObject):
         super(ThreadWorker,self).__init__()
         self.cmd = cmd
         self.thread = thread
+        self.dokill = False
 
     def run(self):
+        self.dokill = False
         try:
             with Popen(self.cmd, shell=True, stdout=PIPE, bufsize=1, universal_newlines=True) as p:
                 for line in p.stdout:
                     self.onLineRead.emit(line)
+                    if self.dokill:
+                        os.kill(p.pid, signal.SIGINT)
         except Exception as e:
             print(str(e))
         self.thread.quit()
@@ -104,7 +109,8 @@ class MainWindow(QMainWindow):
             sets.setValue("Main/selectedsize",1)
 
     def getFolder(self):
-        self.ui.peDir.setPlainText(QFileDialog.getExistingDirectory (self, self.lang.tr("open_a_folder"), "", QFileDialog.ShowDirsOnly))
+        fldr = QFileDialog.getExistingDirectory(self, self.lang.tr("open_a_folder"), "", QFileDialog.ShowDirsOnly)
+        self.ui.peDir.setPlainText(fldr)
 
     def play(self):
         dir = self.ui.peDir.toPlainText().split('\n')
@@ -163,6 +169,8 @@ class MainWindow(QMainWindow):
         self.thread.start()
 
     def parseformats(self):
+        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'formats.txt'), 'w') as f:
+        #    f.write(''.join(self.formats))
         flist = []
         for i in range(2, len(self.formats)):
             line = self.formats[i]
@@ -180,14 +188,26 @@ class MainWindow(QMainWindow):
                     if vsize[1] == self.selected_format:
                         vs = self.selected_format
                         break
+            ext = None
             if vs == 0:
-                i = showSizeDialog(self, flist)
-                if i < 0 or i >= len(flist): return
-                vs = flist[i][1]
-                self.selected_format = vs
+                i, ext = showSizeDialog(self, flist, self.formats)
+                print('ext:', ext)
+                if ext == None:
+                    if i < 0 or i >= len(flist):
+                        self.currenturls = []
+                        self.started = False
+                        self.ui.bPlay.setEnabled(True)
+                        self.ui.bDownload.setEnabled(True)
+                        return
+                    vs = flist[i][1]
+                    self.selected_format = vs
+                else:
+                   vf = f'-f {ext}'
+                   self.selected_format == 0
             self.loading_formats = False
             self.formats.clear()
-            vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
+            if ext == None:
+                vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
             self.runcmd(f'{self.yt_dlp_file} {vf} {self.currenturls[self.currenturlindex]}')
         else:
             self.ui.peLog.appendPlainText('error: !cannot parse formats')
