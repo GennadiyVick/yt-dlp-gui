@@ -62,7 +62,11 @@ class MainWindow(QMainWindow):
         self.loading_formats = False
         self.formats = []
         self.selected_format = 0
-
+        lines = []
+        if len(sys.argv)>1:
+            for i in range(1, len(sys.argv)):
+                lines.append(sys.argv[i])
+        self.ui.peLink.setPlainText('\n'.join(lines))
 
     def updatesettings(self):
         sets = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, os.path.join('RoganovSoft', 'Yt-dlp-gui'), "config")
