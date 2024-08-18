@@ -218,7 +218,7 @@ class MainWindow(QMainWindow):
                    self.selected_format == 0
             self.loading_formats = False
             self.formats.clear()
-            pr = f' --proxy {self.proxy}' self.proxy_enabled and if len(self.proxy) > 3 else ''
+            pr = f' --proxy {self.proxy}' if self.proxy_enabled and len(self.proxy) > 3 else ''
             if ext == None:
                 vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
             self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {self.currenturls[self.currenturlindex]}')
