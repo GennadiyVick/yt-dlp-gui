@@ -35,36 +35,44 @@ class Ui_SettingsDialog(object):
         self.bBrowse_2.setObjectName("bBrowse_2")
         self.hl_player.addWidget(self.bBrowse_2)
         self.verticalLayout.addLayout(self.hl_player)
+
+        self.eProxy = QtWidgets.QLineEdit(SettingsDialog)
+        self.eProxy.setObjectName('eProxy')
+        self.verticalLayout.addWidget(self.eProxy)
+
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
         self.buttonBox = QtWidgets.QDialogButtonBox(SettingsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(SettingsDialog, lang)
-        self.buttonBox.accepted.connect(SettingsDialog.accept) # type: ignore
-        self.buttonBox.rejected.connect(SettingsDialog.reject) # type: ignore
+        self.buttonBox.accepted.connect(SettingsDialog.accept)  # type: ignore
+        self.buttonBox.rejected.connect(SettingsDialog.reject)  # type: ignore
         QtCore.QMetaObject.connectSlotsByName(SettingsDialog)
 
     def retranslateUi(self, SettingsDialog, lang):
         SettingsDialog.setWindowTitle(lang.tr('settingsdialog'))
         self.label.setText(lang.tr("yt_dlp_file"))
         self.label_2.setText(lang.tr("player_file"))
+        self.eProxy.setPlaceholderText(lang.tr("proxy"))
+
 
 class SettingsDialog(QtWidgets.QDialog):
-    def __init__(self, files, parent):
-        super(SettingsDialog,self).__init__(parent)
+    def __init__(self, settings, parent):
+        super(SettingsDialog, self).__init__(parent)
         self.ui = Ui_SettingsDialog()
         self.ui.setupUi(self, parent.lang)
-        self.ui.leYtdlp.setText(files[0])
-        self.ui.lePlayer.setText(files[1])
+        self.ui.leYtdlp.setText(settings['yt-dlp'])
+        self.ui.lePlayer.setText(settings['player'])
+        self.ui.eProxy.setText(settings['proxy'])
 
-def showSettingsDialog(parent, files):
-    dlg = SettingsDialog(files, parent)
+
+def showSettingsDialog(parent, settings):
+    dlg = SettingsDialog(settings, parent)
     if dlg.exec() == 1:
-        return (True, (self.ui.leYtdlp.text(), self.ui.lePlayer.text()))
+        return True, (dlg.ui.leYtdlp.text(), dlg.ui.lePlayer.text(), dlg.ui.eProxy.text())
     else:
-        return (False, None)
-
+        return False, None

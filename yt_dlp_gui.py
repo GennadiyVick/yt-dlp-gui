@@ -49,6 +49,9 @@ class ThreadWorker(QObject):
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
+        self.proxy = ''
+        self.player_file = ''
+        self.yt_dlp_file = ''
         self.ui = mainwindow.Ui_MainWindow()
         self.lang = Lang()
         self.ui.setupUi(self, self.lang)
@@ -70,16 +73,17 @@ class MainWindow(QMainWindow):
 
     def updatesettings(self):
         sets = QtCore.QSettings(QtCore.QSettings.IniFormat, QtCore.QSettings.UserScope, os.path.join('RoganovSoft', 'Yt-dlp-gui'), "config")
-        w, h = int(sets.value("Main/Width","-1")), int(sets.value("Main/Height","-1"))
+        w, h = int(sets.value("Main/Width", "-1")), int(sets.value("Main/Height","-1"))
         if w > 0 and h > 0:
             self.resize(w,h)
-        x, y = int(sets.value("Main/Left","-1")), int(sets.value("Main/Top","-1"))
+        x, y = int(sets.value("Main/Left", "-1")), int(sets.value("Main/Top","-1"))
         if x > 0 and y > 0:
             self.move(x,y)
         else:
             self.move(QtWidgets.QApplication.desktop().screen().rect().center() - self.rect().center())
-        self.yt_dlp_file = sets.value("Main/yt_dlp_file",YT_DLP_FILE)
-        self.player_file = sets.value("Main/player_file",PLAYER_FILE)
+        self.yt_dlp_file = sets.value("Main/yt_dlp_file", YT_DLP_FILE)
+        self.player_file = sets.value("Main/player_file", PLAYER_FILE)
+        self.proxy = sets.value('Main/proxy', '')
         self.ui.peDir.setPlainText(sets.value("Main/savepath",""))
         v = int(strtoint(sets.value("Main/selectedsize")))
         if v == 0:
@@ -90,10 +94,10 @@ class MainWindow(QMainWindow):
             self.ui.bFormats.setChecked(True)
 
     def showsettings(self):
-        r = showSettingsDialog(self, (self.yt_dlp_file,self.player_file))
-        if r[0] == True:
-            self.yt_dlp_file = r[1][0]
-            self.player_file = r[1][2]
+        r = showSettingsDialog(self, {'yt-dlp': self.yt_dlp_file, 'player': self.player_file, 'proxy': self.proxy})
+        if r[0]:
+            self.yt_dlp_file, self.player_file, self.proxy = r[1]
+
 
 
     def savesettings(self):
@@ -104,7 +108,8 @@ class MainWindow(QMainWindow):
         sets.setValue("Main/Height", self.height())
         sets.setValue("Main/yt_dlp_file", self.yt_dlp_file)
         sets.setValue("Main/player_file", self.player_file)
-        sets.setValue("Main/savepath",self.ui.peDir.toPlainText())
+        sets.setValue('Main/proxy', self.proxy)
+        sets.setValue("Main/savepath", self.ui.peDir.toPlainText())
         if self.ui.b720.isChecked():
             sets.setValue("Main/selectedsize",0)
         elif self.ui.bFormats.isChecked():
@@ -125,10 +130,11 @@ class MainWindow(QMainWindow):
         urls = self.ui.peLink.toPlainText().split('\n')
         if len(urls) > 1:
             self.ui.peLog.appendPlainText("!!!Play only first url!")
+        pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
         self.currenturls = [urls[0]]
         self.currenturlindex = 0
         self.ui.peLog.appendPlainText("Downloadin format 1280X720")
-        self.runcmd(f'{self.yt_dlp_file} -f 22 -q -o- {urls[0]} | {self.player_file} -af scaletempo -softvol -softvol-max 400 -cache 8192  -')
+        self.runcmd(f'{self.yt_dlp_file}{pr} -f 22 -q -o- {urls[0]} | {self.player_file} -af scaletempo -softvol -softvol-max 400 -cache 8192  -')
         #yt-dlp -f 22 -q -o- "$*" | /home/genius/apps/mplayer.ext -af scaletempo -softvol -softvol-max 400 -cache 8192  -
 
 
@@ -151,11 +157,11 @@ class MainWindow(QMainWindow):
             vf = '-F'
         else:
             vf = ''
-
+        pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
         for i in range(len(urls)):
             if len(urls[i]) > 7:
                 self.currenturlindex = i
-                self.runcmd(f'{self.yt_dlp_file} {vf} {urls[i]}')
+                self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {urls[i]}')
                 break
 
     def runcmd(self, cmd):
@@ -173,12 +179,11 @@ class MainWindow(QMainWindow):
         self.thread.start()
 
     def parseformats(self):
-        #with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'formats.txt'), 'w') as f:
-        #    f.write(''.join(self.formats))
         flist = []
+
         for i in range(2, len(self.formats)):
             line = self.formats[i]
-            vs = line[10:20].replace(' ','')
+            vs = line[14:24].replace(' ','')
             if 'x' in vs:
                 xi = vs.index('x')
                 w = strtoint(vs[:xi])
@@ -210,9 +215,10 @@ class MainWindow(QMainWindow):
                    self.selected_format == 0
             self.loading_formats = False
             self.formats.clear()
+            pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
             if ext == None:
                 vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
-            self.runcmd(f'{self.yt_dlp_file} {vf} {self.currenturls[self.currenturlindex]}')
+            self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {self.currenturls[self.currenturlindex]}')
         else:
             self.ui.peLog.appendPlainText('error: !cannot parse formats')
 
@@ -231,7 +237,8 @@ class MainWindow(QMainWindow):
                 vf = '-F'
             else:
                 vf = ''
-            self.runcmd(f'{self.yt_dlp_file} {vf} {self.currenturls[self.currenturlindex]}')
+            pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
+            self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {self.currenturls[self.currenturlindex]}')
             return
         self.currenturls = []
         self.started = False
@@ -266,6 +273,7 @@ class MainWindow(QMainWindow):
 
 
 app = QtWidgets.QApplication(sys.argv)
+app.setWindowIcon(QtGui.QIcon(":/yt-dlp.png"))
 themedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'darktheme')
 fn = os.path.join(themedir,'theme.qrc')
 if os.path.isfile(fn):

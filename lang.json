@@ -19,5 +19,6 @@
 "audio_video_formats": {"default": "Audio and video formats:", "ru": "Аудио и видео форматы:"},
 "audio_formats": {"default": "Audio formats:", "ru": "Аудио форматы:"},
 "video_formats": {"default": "Video formats:", "ru": "Видео форматы:"},
-"formats_info": {"default": "Choose either one general format or one video and one audio", "ru": "Выбери либо один общий формат либо один видео и один аудио"}
+"formats_info": {"default": "Choose either one general format or one video and one audio", "ru": "Выбери либо один общий формат либо один видео и один аудио"},
+"proxy": {"default": "Proxy (http(socks5)://ip:port)", "ru": "Прокси сервер (http(socks5)://ip:port)"}
 }

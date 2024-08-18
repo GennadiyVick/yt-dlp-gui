@@ -21,3 +21,5 @@ class Lang:
     def tr(self,s):
         return self.dic[s][self.lang] if s in self.dic else s
 
+#lang = Lang()
+
