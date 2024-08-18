@@ -46,6 +46,5 @@ python3 program_path/yt_dlp_gui.py
 ```
 You can also add permission to run the script and double-click to run it, as well as create a desktop shortcut.
 
-Author: Roganov G.V. roganovg@mail.ru
 
 
