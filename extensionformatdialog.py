@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from extensionformatdialogui import Ui_ExtensionFormatDialog
 
+
 class ExtensionFormatDialog(QtWidgets.QDialog):
 
     def __init__(self, parent, formats):
@@ -9,9 +10,9 @@ class ExtensionFormatDialog(QtWidgets.QDialog):
         self.ui = Ui_ExtensionFormatDialog()
         self.ui.setupUi(self, parent.lang)
 
-        for i in range(2,len(formats)):
+        for i in range(2, len(formats)):
             line = formats[i]
-            size = line[10:20].strip()
+            size = line[14:24].strip()
             if 'x' in size and int(size[:size.index('x')]) < 400:
                 continue
             if ' images ' in line:

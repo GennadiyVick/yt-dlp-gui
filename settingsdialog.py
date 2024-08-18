@@ -36,6 +36,9 @@ class Ui_SettingsDialog(object):
         self.hl_player.addWidget(self.bBrowse_2)
         self.verticalLayout.addLayout(self.hl_player)
 
+        self.cbProxy = QtWidgets.QCheckBox(SettingsDialog)
+        self.cbProxy.setObjectName('cbProxy')
+        self.verticalLayout.addWidget(self.cbProxy)
         self.eProxy = QtWidgets.QLineEdit(SettingsDialog)
         self.eProxy.setObjectName('eProxy')
         self.verticalLayout.addWidget(self.eProxy)
@@ -57,7 +60,8 @@ class Ui_SettingsDialog(object):
         SettingsDialog.setWindowTitle(lang.tr('settingsdialog'))
         self.label.setText(lang.tr("yt_dlp_file"))
         self.label_2.setText(lang.tr("player_file"))
-        self.eProxy.setPlaceholderText(lang.tr("proxy"))
+        self.eProxy.setPlaceholderText(lang.tr("proxy_placeholder"))
+        self.cbProxy.setText(lang.tr("proxy"))
 
 
 class SettingsDialog(QtWidgets.QDialog):
@@ -68,11 +72,12 @@ class SettingsDialog(QtWidgets.QDialog):
         self.ui.leYtdlp.setText(settings['yt-dlp'])
         self.ui.lePlayer.setText(settings['player'])
         self.ui.eProxy.setText(settings['proxy'])
+        self.ui.cbProxy.setChecked(settings['proxy_enabled'] == "1")
 
 
 def showSettingsDialog(parent, settings):
     dlg = SettingsDialog(settings, parent)
     if dlg.exec() == 1:
-        return True, (dlg.ui.leYtdlp.text(), dlg.ui.lePlayer.text(), dlg.ui.eProxy.text())
+        return True, (dlg.ui.leYtdlp.text(), dlg.ui.lePlayer.text(), dlg.ui.eProxy.text(), "1" if dlg.ui.cbProxy.isChecked() else "0")
     else:
         return False, None

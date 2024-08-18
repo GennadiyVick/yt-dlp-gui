@@ -50,6 +50,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.proxy = ''
+        self.proxy_enabled = "0"
         self.player_file = ''
         self.yt_dlp_file = ''
         self.ui = mainwindow.Ui_MainWindow()
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow):
         self.yt_dlp_file = sets.value("Main/yt_dlp_file", YT_DLP_FILE)
         self.player_file = sets.value("Main/player_file", PLAYER_FILE)
         self.proxy = sets.value('Main/proxy', '')
+        self.proxy_enabled = sets.value('Main/proxy_enabled','0')
         self.ui.peDir.setPlainText(sets.value("Main/savepath",""))
         v = int(strtoint(sets.value("Main/selectedsize")))
         if v == 0:
@@ -94,9 +96,9 @@ class MainWindow(QMainWindow):
             self.ui.bFormats.setChecked(True)
 
     def showsettings(self):
-        r = showSettingsDialog(self, {'yt-dlp': self.yt_dlp_file, 'player': self.player_file, 'proxy': self.proxy})
+        r = showSettingsDialog(self, {'yt-dlp': self.yt_dlp_file, 'player': self.player_file, 'proxy': self.proxy, 'proxy_enabled': self.proxy_enabled})
         if r[0]:
-            self.yt_dlp_file, self.player_file, self.proxy = r[1]
+            self.yt_dlp_file, self.player_file, self.proxy, self.proxy_enabled = r[1]
 
 
 
@@ -109,6 +111,7 @@ class MainWindow(QMainWindow):
         sets.setValue("Main/yt_dlp_file", self.yt_dlp_file)
         sets.setValue("Main/player_file", self.player_file)
         sets.setValue('Main/proxy', self.proxy)
+        sets.setValue('Main/proxy_enabled', self.proxy_enabled)
         sets.setValue("Main/savepath", self.ui.peDir.toPlainText())
         if self.ui.b720.isChecked():
             sets.setValue("Main/selectedsize",0)
@@ -130,7 +133,7 @@ class MainWindow(QMainWindow):
         urls = self.ui.peLink.toPlainText().split('\n')
         if len(urls) > 1:
             self.ui.peLog.appendPlainText("!!!Play only first url!")
-        pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
+        pr = f' --proxy {self.proxy}' if self.proxy_enabled and len(self.proxy) > 3 else ''
         self.currenturls = [urls[0]]
         self.currenturlindex = 0
         self.ui.peLog.appendPlainText("Downloadin format 1280X720")
@@ -157,7 +160,7 @@ class MainWindow(QMainWindow):
             vf = '-F'
         else:
             vf = ''
-        pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
+        pr = f' --proxy {self.proxy}' if self.proxy_enabled and len(self.proxy) > 3 else ''
         for i in range(len(urls)):
             if len(urls[i]) > 7:
                 self.currenturlindex = i
@@ -215,7 +218,7 @@ class MainWindow(QMainWindow):
                    self.selected_format == 0
             self.loading_formats = False
             self.formats.clear()
-            pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
+            pr = f' --proxy {self.proxy}' self.proxy_enabled and if len(self.proxy) > 3 else ''
             if ext == None:
                 vf = f'-f "bestvideo[height<={vs}]+bestaudio[ext=m4a]"'
             self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {self.currenturls[self.currenturlindex]}')
@@ -237,7 +240,7 @@ class MainWindow(QMainWindow):
                 vf = '-F'
             else:
                 vf = ''
-            pr = f' --proxy {self.proxy}' if len(self.proxy) > 3 else ''
+            pr = f' --proxy {self.proxy}' if self.proxy_enabled and len(self.proxy) > 3 else ''
             self.runcmd(f'{self.yt_dlp_file}{pr} {vf} {self.currenturls[self.currenturlindex]}')
             return
         self.currenturls = []
